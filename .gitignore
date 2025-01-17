@@ -1,0 +1,19 @@
+# General
+data/
+.env
+.gz
+
+# Packages
+packages/
+node_modules/
+
+# Build artifacts
+obj/
+bin/
+target/
+a.out
+
+# editors
+.vscode
+.ionide/
+
