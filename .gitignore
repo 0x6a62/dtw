@@ -11,9 +11,14 @@ node_modules/
 obj/
 bin/
 target/
+zig-out/
 a.out
+
+# zig
+.zig-cache/
 
 # editors
 .vscode
 .ionide/
+
 
