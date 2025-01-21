@@ -13,6 +13,8 @@ bin/
 target/
 zig-out/
 a.out
+*.a
+*.a.o
 
 # zig
 .zig-cache/
