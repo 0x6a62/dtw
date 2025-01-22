@@ -2,21 +2,20 @@ const std = @import("std");
 const math = std.math;
 const testing = std.testing;
 
-/// Cost and underlying matrix for calculation
-const CostAndMatrix = struct {
-    /// Dtw cost
-    cost: f32,
-    /// Dtw calculation matrix
-    matrix: []f32,
-    /// Length of the a side of the matrix
-    matrixALen: usize,
-    /// Length of the b side of the matrix
-    matrixBLen: usize,
-};
-
 /// Calculate distance between values
-fn distance(a: f32, b: f32) f32 {
-    return @abs(a - b);
+fn distance(comptime T: type, a: T, b: T) T {
+    return switch (@typeInfo(T)) {
+        .float => @abs(a - b),
+        .int => {
+            // Int doesn't seem to play well with @abs, signed vs unsighed
+            if (a > b) {
+                return a - b;
+            } else {
+                return b - a;
+            }
+        },
+        else => @compileError("Unsupported type"),
+    };
 }
 
 /// Convert a 2D index (a, b) to a 1D position
@@ -27,8 +26,8 @@ pub fn index(amax: usize, bmax: usize, a: usize, b: usize) usize {
 }
 
 /// Calculate cost difference between two sequences (dtw-style)
-pub fn cost(allocator: std.mem.Allocator, a: []const f32, b: []const f32) !f32 {
-    const result = costAndMatrix(allocator, a, b) catch |err| {
+pub fn cost(comptime T: type, allocator: std.mem.Allocator, a: []const T, b: []const T) !T {
+    const result = costAndMatrix(T, allocator, a, b) catch |err| {
         return err;
     };
     defer allocator.free(result.matrix); // ?
@@ -38,26 +37,43 @@ pub fn cost(allocator: std.mem.Allocator, a: []const f32, b: []const f32) !f32 {
 
 /// Calculate cost difference between two sequences (dtw-style)
 /// Also return the underlying cost matrix (useful for debugging)
-pub fn costAndMatrix(allocator: std.mem.Allocator, a: []const f32, b: []const f32) !CostAndMatrix {
+pub fn costAndMatrix(comptime T: type, allocator: std.mem.Allocator, a: []const T, b: []const T) !struct {
+    cost: T,
+    matrix: []T,
+    matrixALen: usize,
+    matrixBLen: usize,
+} {
+    // !CostAndMatrix {
     // Init matrix
     const matrix_a_len: usize = a.len + 1;
     const matrix_b_len: usize = b.len + 1;
 
-    var data = try allocator.alloc(f32, matrix_a_len * matrix_b_len);
+    var data = try allocator.alloc(T, matrix_a_len * matrix_b_len);
+    data[0] = 0;
 
     // Init edges to max value, since they should never be considered in the cost path calculation
     for (1..matrix_a_len) |ai| {
-        data[index(matrix_a_len, matrix_b_len, ai, 0)] = math.floatMax(f32);
+        data[index(matrix_a_len, matrix_b_len, ai, 0)] =
+            switch (@typeInfo(T)) {
+            .float => math.floatMax(T),
+            .int => math.maxInt(T),
+            else => @compileError("Unsupported type"),
+        };
     }
     for (1..matrix_b_len) |bi| {
-        data[index(matrix_a_len, matrix_b_len, 0, bi)] = math.floatMax(f32);
+        data[index(matrix_a_len, matrix_b_len, 0, bi)] =
+            switch (@typeInfo(T)) {
+            .float => math.floatMax(T),
+            .int => math.maxInt(T),
+            else => @compileError("Unsupported type"),
+        };
     }
 
     // Calculate cost matrix
     // NOTE: ai and bi represent index in data (do -1 when referencing into the a and b arrays)
     for (1..matrix_a_len) |ai| {
         for (1..matrix_b_len) |bi| {
-            const cell_cost = distance(a[ai - 1], b[bi - 1]);
+            const cell_cost = distance(T, a[ai - 1], b[bi - 1]);
             data[index(matrix_a_len, matrix_b_len, ai, bi)] =
                 cell_cost +
                 @min(@min(data[index(matrix_a_len, matrix_b_len, ai - 1, bi)], data[index(matrix_a_len, matrix_b_len, ai, bi - 1)]), data[index(matrix_a_len, matrix_b_len, ai - 1, bi - 1)]);
@@ -77,10 +93,10 @@ pub fn costAndMatrix(allocator: std.mem.Allocator, a: []const f32, b: []const f3
 // Tests
 
 test "distance" {
-    try testing.expect(distance(3.1, 9.2) == 6.1);
-    try testing.expect(distance(9.2, 3.1) == 6.1);
-    try testing.expect(distance(0, 0) == 0);
-    try testing.expect(distance(8, 8) == 0);
+    try testing.expect(distance(f32, 3.1, 9.2) == 6.1);
+    try testing.expect(distance(f32, 9.2, 3.1) == 6.1);
+    try testing.expect(distance(f32, 0, 0) == 0);
+    try testing.expect(distance(f32, 8, 8) == 0);
 }
 
 test "cost - zero difference" {
@@ -89,7 +105,7 @@ test "cost - zero difference" {
     const a = [_]f32{ 10, 12, 13, 14, 14, 15, 17 };
     const b = [_]f32{ 10, 12, 13, 14, 14, 15, 17 };
 
-    const c = try cost(allocator, &a, &b);
+    const c = try cost(f32, allocator, &a, &b);
 
     // epsilon to deal with float's lack of precision
     const epsilon = 1e-5;
@@ -102,7 +118,7 @@ test "cost - one difference" {
     const a = [_]f32{ 10, 12, 13, 14, 14, 15, 17 };
     const b = [_]f32{ 10, 12, 14, 14, 14, 15, 17 };
 
-    const c = try cost(allocator, &a, &b);
+    const c = try cost(f32, allocator, &a, &b);
 
     // epsilon to deal with float's lack of precision
     const epsilon = 1e-5;
