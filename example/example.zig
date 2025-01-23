@@ -24,19 +24,7 @@ pub fn main() !void {
         // Cost and Matrix
         const cm = try dtw.costAndMatrix(f32, allocator, &a, &b);
         defer allocator.free(cm.matrix); // ?
-
-        try stdout.print("\n", .{});
-        for (0..cm.matrixALen) |ai| {
-            for (0..cm.matrixBLen) |bi| {
-                if (ai == 0 or bi == 0) {
-                    try stdout.print("  -  ", .{});
-                } else {
-                    try stdout.print("{d:5.1} ", .{cm.matrix[dtw.index(cm.matrixALen, cm.matrixBLen, ai, bi)]});
-                }
-            }
-            try stdout.print("\n", .{});
-        }
-        // Cost
+        try dtw.showMatrix(f32, stdout, cm.aLen, cm.bLen, cm.matrix);
         try stdout.print("cost: {d}\n", .{cm.cost});
     }
 
@@ -57,19 +45,7 @@ pub fn main() !void {
         // Cost and Matrix
         const cm = try dtw.costAndMatrix(f64, allocator, &a, &b);
         defer allocator.free(cm.matrix); // ?
-
-        try stdout.print("\n", .{});
-        for (0..cm.matrixALen) |ai| {
-            for (0..cm.matrixBLen) |bi| {
-                if (ai == 0 or bi == 0) {
-                    try stdout.print("  -  ", .{});
-                } else {
-                    try stdout.print("{d:5.1} ", .{cm.matrix[dtw.index(cm.matrixALen, cm.matrixBLen, ai, bi)]});
-                }
-            }
-            try stdout.print("\n", .{});
-        }
-        // Cost
+        try dtw.showMatrix(f64, stdout, cm.aLen, cm.bLen, cm.matrix);
         try stdout.print("cost: {d}\n", .{cm.cost});
     }
 
@@ -90,19 +66,7 @@ pub fn main() !void {
         // Cost and Matrix
         const cm = try dtw.costAndMatrix(i64, allocator, &a, &b);
         defer allocator.free(cm.matrix); // ?
-
-        try stdout.print("\n", .{});
-        for (0..cm.matrixALen) |ai| {
-            for (0..cm.matrixBLen) |bi| {
-                if (ai == 0 or bi == 0) {
-                    try stdout.print("  -  ", .{});
-                } else {
-                    try stdout.print("{d:4} ", .{cm.matrix[dtw.index(cm.matrixALen, cm.matrixBLen, ai, bi)]});
-                }
-            }
-            try stdout.print("\n", .{});
-        }
-        // Cost
+        try dtw.showMatrix(i64, stdout, cm.aLen, cm.bLen, cm.matrix);
         try stdout.print("cost: {d}\n", .{cm.cost});
     }
 }

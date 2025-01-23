@@ -20,8 +20,7 @@ fn distance(comptime T: type, a: T, b: T) T {
 
 /// Convert a 2D index (a, b) to a 1D position
 /// Used when storing a 2D array in a 1D array
-pub fn index(amax: usize, bmax: usize, a: usize, b: usize) usize {
-    _ = bmax;
+pub fn index(amax: usize, a: usize, b: usize) usize {
     return (b * amax) + a;
 }
 
@@ -40,53 +39,54 @@ pub fn cost(comptime T: type, allocator: std.mem.Allocator, a: []const T, b: []c
 pub fn costAndMatrix(comptime T: type, allocator: std.mem.Allocator, a: []const T, b: []const T) !struct {
     cost: T,
     matrix: []T,
-    matrixALen: usize,
-    matrixBLen: usize,
+    aLen: usize,
+    bLen: usize,
 } {
-    // !CostAndMatrix {
     // Init matrix
-    const matrix_a_len: usize = a.len + 1;
-    const matrix_b_len: usize = b.len + 1;
+    const a_len: usize = a.len;
+    const b_len: usize = b.len;
 
-    var data = try allocator.alloc(T, matrix_a_len * matrix_b_len);
-    data[0] = 0;
-
-    // Init edges to max value, since they should never be considered in the cost path calculation
-    for (1..matrix_a_len) |ai| {
-        data[index(matrix_a_len, matrix_b_len, ai, 0)] =
-            switch (@typeInfo(T)) {
-            .float => math.floatMax(T),
-            .int => math.maxInt(T),
-            else => @compileError("Unsupported type"),
-        };
-    }
-    for (1..matrix_b_len) |bi| {
-        data[index(matrix_a_len, matrix_b_len, 0, bi)] =
-            switch (@typeInfo(T)) {
-            .float => math.floatMax(T),
-            .int => math.maxInt(T),
-            else => @compileError("Unsupported type"),
-        };
-    }
+    var data = try allocator.alloc(T, a_len * b_len);
 
     // Calculate cost matrix
-    // NOTE: ai and bi represent index in data (do -1 when referencing into the a and b arrays)
-    for (1..matrix_a_len) |ai| {
-        for (1..matrix_b_len) |bi| {
-            const cell_cost = distance(T, a[ai - 1], b[bi - 1]);
-            data[index(matrix_a_len, matrix_b_len, ai, bi)] =
-                cell_cost +
-                @min(@min(data[index(matrix_a_len, matrix_b_len, ai - 1, bi)], data[index(matrix_a_len, matrix_b_len, ai, bi - 1)]), data[index(matrix_a_len, matrix_b_len, ai - 1, bi - 1)]);
+    for (0..a_len) |ai| {
+        for (0..b_len) |bi| {
+            const cell_cost = distance(T, a[ai], b[bi]);
+
+            // previous cost is min of adjacent positions in matrix
+            // Check for edge of matrix to stay in bounds
+            const previous_cost =
+                if (ai > 0 and bi > 0)
+                @min(@min(data[index(a_len, ai - 1, bi)], data[index(a_len, ai, bi - 1)]), data[index(a_len, ai - 1, bi - 1)])
+            else if (ai > 0)
+                data[index(a_len, ai - 1, bi)]
+            else if (bi > 0)
+                data[index(a_len, ai, bi - 1)]
+            else
+                0;
+
+            data[index(a_len, ai, bi)] = cell_cost + previous_cost;
         }
     }
 
     // Return final cost
     return .{
-        .cost = data[a.len * matrix_b_len + b.len],
+        .cost = data[index(a_len, a.len - 1, b.len - 1)],
         .matrix = data,
-        .matrixALen = matrix_a_len,
-        .matrixBLen = matrix_b_len,
+        .aLen = a_len,
+        .bLen = b_len,
     };
+}
+
+/// Show cost matrix
+/// Simple output of cost matrix (for debugging purposes)
+pub fn showMatrix(comptime T: type, stdout: std.fs.File.Writer, aMax: usize, bMax: usize, matrix: []const T) !void {
+    for (0..aMax) |ai| {
+        for (0..bMax) |bi| {
+            try stdout.print("{d:5.1} ", .{matrix[index(aMax, ai, bi)]});
+        }
+        try stdout.print("\n", .{});
+    }
 }
 
 ////////
