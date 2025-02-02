@@ -4,10 +4,10 @@ Dynamic Time Warping
 
 # Components
 
-* Library
-  * `src`
+* Modules
+  * dtw
 * Example usage
-  * `example`
+  * example
 
 # Development
 
@@ -23,4 +23,24 @@ zig build test
 zig test src/dtw.zig
 ```
 
+# Usage
+
+## Install
+```
+zig fetch --save git+https://github.com/0x6a62/dtw.git
+```
+
+## Add to your `build.zig`
+```
+const dtw = b.dependency("dtw", .{
+    .target = target,
+    .optimize = optimize,
+});
+exe.root_module.addImport("dtw", dtw.module("dtw"));
+```
+
+## Using in code
+```
+const dtw = @import("dtw");
+```
 
