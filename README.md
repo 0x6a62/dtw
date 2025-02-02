@@ -11,6 +11,8 @@ Dynamic Time Warping
 
 # Development
 
+Zig target version: 0.13.0
+
 ```
 # Build
 zig build
@@ -19,8 +21,7 @@ zig build
 zig build run
 
 # Test
-zig build test
-zig test src/dtw.zig
+zig build test --summary all
 ```
 
 # Usage

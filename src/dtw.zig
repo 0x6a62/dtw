@@ -5,8 +5,8 @@ const testing = std.testing;
 /// Calculate distance between values
 fn distance(comptime T: type, a: T, b: T) T {
     return switch (@typeInfo(T)) {
-        .float => @abs(a - b),
-        .int => {
+        .Float => @abs(a - b),
+        .Int => {
             // Int doesn't seem to play well with @abs, signed vs unsighed
             if (a > b) {
                 return a - b;
