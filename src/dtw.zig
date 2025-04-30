@@ -5,9 +5,9 @@ const testing = std.testing;
 /// Calculate distance between values
 fn distance(comptime T: type, a: T, b: T) T {
     return switch (@typeInfo(T)) {
-        .Float => @abs(a - b),
-        .Int => {
-            // Int doesn't seem to play well with @abs, signed vs unsighed
+        .float => @abs(a - b),
+        .int => {
+            // Int doesn't seem to play well with @abs, signed vs unsigned
             if (a > b) {
                 return a - b;
             } else {
@@ -57,13 +57,13 @@ pub fn costAndMatrix(comptime T: type, allocator: std.mem.Allocator, a: []const 
             // Check for edge of matrix to stay in bounds
             const previous_cost =
                 if (ai > 0 and bi > 0)
-                @min(@min(data[index(a_len, ai - 1, bi)], data[index(a_len, ai, bi - 1)]), data[index(a_len, ai - 1, bi - 1)])
-            else if (ai > 0)
-                data[index(a_len, ai - 1, bi)]
-            else if (bi > 0)
-                data[index(a_len, ai, bi - 1)]
-            else
-                0;
+                    @min(@min(data[index(a_len, ai - 1, bi)], data[index(a_len, ai, bi - 1)]), data[index(a_len, ai - 1, bi - 1)])
+                else if (ai > 0)
+                    data[index(a_len, ai - 1, bi)]
+                else if (bi > 0)
+                    data[index(a_len, ai, bi - 1)]
+                else
+                    0;
 
             data[index(a_len, ai, bi)] = cell_cost + previous_cost;
         }

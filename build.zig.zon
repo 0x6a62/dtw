@@ -1,6 +1,8 @@
 .{
-    .name = "dtw",
-    .version = "0.3.0",
+    .name = .dtw,
+    .version = "0.4.0",
+    .fingerprint = 0x35ade283b0e94b07, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.0",
     .dependencies = .{},
     .paths = .{
         "build.zig",

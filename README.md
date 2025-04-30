@@ -11,7 +11,7 @@ Dynamic Time Warping
 
 # Development
 
-Zig target version: 0.13.0
+Zig target version: 0.14.0
 
 ```
 # Build
