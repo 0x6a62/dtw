@@ -80,7 +80,7 @@ pub fn costAndMatrix(comptime T: type, allocator: std.mem.Allocator, a: []const 
 
 /// Show cost matrix
 /// Simple output of cost matrix (for debugging purposes)
-pub fn showMatrix(comptime T: type, stdout: std.fs.File.Writer, aMax: usize, bMax: usize, matrix: []const T) !void {
+pub fn showMatrix(comptime T: type, stdout: *std.io.Writer, aMax: usize, bMax: usize, matrix: []const T) !void {
     for (0..aMax) |ai| {
         for (0..bMax) |bi| {
             try stdout.print("{d:5.1} ", .{matrix[index(aMax, ai, bi)]});

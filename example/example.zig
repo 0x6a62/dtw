@@ -5,7 +5,10 @@ const dtw = @import("dtw");
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    const stdout = std.io.getStdOut().writer();
+
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
+    const stdout = &stdout_writer.interface;
 
     //////
     // f32
@@ -69,4 +72,6 @@ pub fn main() !void {
         try dtw.showMatrix(i64, stdout, cm.aLen, cm.bLen, cm.matrix);
         try stdout.print("cost: {d}\n", .{cm.cost});
     }
+
+    try stdout.flush();
 }
